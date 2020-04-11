@@ -1,0 +1,11 @@
+In the Rosetta project we've taken a different approach to error handling than a lot of CE projects take:
+
+During startup (e.g., loading terms and valuesets) we fail hard if anything doesn't look like we expect: there is no attempt at graceful failure or working with limited functionality - we crash the service deliberately. Because everything is deterministic (no difference between prod and a locally running instance) this strategy lets us find errors faster and prevents incorrect mappings/memberships from making it to prod (and thus to deployments, where they are hard to detect/fix).
+
+When handling a FHIR request like the $translate operation, however, we try hard to not throw an exception ever, since ATMS would just fail the task, which is hard to find and probably not the right thing to do anyway.
+
+From an API point of view we're answering the question "what does this term map to?" if the domain on the request means that SNOMED won't have a mapping, returning nothing for SNOMED is correct.
+
+Note that we filter translates by request via the Domains member on IRosettaConceptMap, so a mapper will only ever see requests that have a domain that it states it can handle.
+
+TL;DR a KeyNotFoundException would never be the desired behavior.
